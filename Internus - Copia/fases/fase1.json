@@ -1,0 +1,22 @@
+{
+  "id": 1,
+  "nome": "Fase 1",
+  "worldWidth": 2000,
+  "worldHeight": 3000,
+  "playerSpawn": { "x": 960, "y": 2400 },
+  "blocos": [
+    { "id": 0, "x": 0, "y": 895, "width": 200, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    {"id": 0, "x": 300, "y": 800, "width": 400, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 2, "x": 800, "y": 700, "width": 300, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 3, "x": 1200, "y": 600, "width": 350, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 4, "x": 1600, "y": 500, "width": 300, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 5, "x": 0, "y": 1300, "width": 600, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 6, "x": 800, "y": 1200, "width": 500, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 7, "x": 1400, "y": 1100, "width": 400, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 8, "x": 200, "y": 1900, "width": 300, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 9, "x": 600, "y": 1800, "width": 450, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 10, "x": 1100, "y": 1700, "width": 500, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 1, "x": -50, "y": 2500, "width": 2100, "height": 500, "tipo": "bloco_lava", "cor": "#FF4500" },
+    { "id": 2, "x": 1800, "y": 250, "width": 150, "height": 100, "tipo": "bloco_transicao", "cor": "#FFFFFF", "proximaFase": 2 }
+  ]
+}
