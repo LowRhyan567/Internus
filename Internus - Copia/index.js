@@ -240,11 +240,11 @@ function animate() {
     ctx.fillText('Parabéns!', canvas.width / 2, canvas.height / 3);
     
     ctx.font = '30px Arial';
-    ctx.fillText('Você completou o jogo!', canvas.width / 2, canvas.height / 3 + 80);
+    ctx.fillText('Você alcançou o cerébro!', canvas.width / 2, canvas.height / 3 + 80);
     
     if (!gameState.messageSent) {
       ctx.font = '20px Arial';
-      ctx.fillText('Deixe suas mensagem para os que virão.:', canvas.width / 2, canvas.height / 2);
+      ctx.fillText('Deixe sua mensagem aos que virão.:', canvas.width / 2, canvas.height / 2);
       
       // Campo de input visual
       const inputWidth = 500;

@@ -11,8 +11,8 @@ class Player{
         this.isOnGround = false;
         
         // Sistema de double jump
-        this.jumpsRemaining = 5;
-        this.maxJumps = 5;
+        this.jumpsRemaining = 2;
+        this.maxJumps = 2;
         
         // Sistema de vida
         this.health = 3;
@@ -194,12 +194,11 @@ class Player{
                 }
                 
                 // Verificar bloco de lava - causa dano
-             //   if (block.tipo === 'bloco_lava') {
-             //       this.takeDamage(1);
-             //       // Empurrar player para cima ao tocar lava
-             //       this.velocity.y = -15;
-             //       return;
-             //   }
+                if (block.tipo === 'bloco_lava') {
+                      this.takeDamage(1);
+                      this.velocity.y = -15;
+                    return;
+             }
 
                 // Detectar direção da colisão
                 const overlapTop = this.sides.bottom - block.y;
