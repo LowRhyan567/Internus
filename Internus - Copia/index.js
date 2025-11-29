@@ -18,18 +18,26 @@ const camera = {
 // Estado do jogo
 let currentLevel = null;
 let player = null;
-let enemies = []; // Lista de inimigos
-let isLoadingLevel = false;  // Flag para evitar múltiplos carregamentos
+let enemies = [];
+let isLoadingLevel = false;
 
 // Estado global do jogo
 let gameState = {
-  isPaused: false,           // Se jogo está pausado (tela final)
-  showingEndScreen: false,   // Se mostrando tela de fim
-  showingDeathScreen: false  // Se mostrando tela de morte
+  isPaused: false,
+  showingEndScreen: false,
+  showingDeathScreen: false,
+  messageInput: '',
+  messageSent: false
 };
 
 // Sistema de aceleração de queda
-window.gravityMultiplier = 1.0;  // Multiplicador de gravidade (1.0 = normal, 2.0 = acelerado)
+window.gravityMultiplier = 1.0;
+
+// Coordenadas globais do campo de input e botão (definidas na animação)
+const endScreenElements = {
+    input: { x: 0, y: 0, width: 0, height: 0 },
+    button: { x: 0, y: 0, width: 0, height: 0 }
+};
 
 // Callback para morte do player
 window.onPlayerDeath = function() {
@@ -40,14 +48,40 @@ window.onPlayerDeath = function() {
 
 // Verificar se é a última fase
 function isLastPhase(levelNumber) {
-  // Atualizar este número conforme adicionar mais fases
   return levelNumber === 2;
+}
+
+// Enviar mensagem para o servidor
+async function sendMessageToServer(message) {
+  try {
+    const response = await fetch('http://localhost:8001/api/mensagem', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mensagem: message })
+    });
+    
+    const data = await response.json();
+    if (data.status === 'success') {
+      console.log('✅ Mensagem enviada com sucesso!');
+      return true;
+    } else {
+      console.error('❌ Erro ao enviar mensagem:', data.message);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao enviar mensagem:', error);
+    return false;
+  }
 }
 
 // Mostrar tela final
 function showEndScreen() {
   gameState.isPaused = true;
   gameState.showingEndScreen = true;
+  gameState.messageInput = '';
+  gameState.messageSent = false;
   console.log('🏁 JOGO FINALIZADO!');
 }
 
@@ -56,6 +90,8 @@ function restartGame() {
   gameState.isPaused = false;
   gameState.showingEndScreen = false;
   gameState.showingDeathScreen = false;
+  gameState.messageInput = '';
+  gameState.messageSent = false;
   currentLevel = null;
   player = null;
   enemies = [];
@@ -75,14 +111,12 @@ async function loadLevel(levelNumber) {
     currentLevel = await response.json();
     console.log(`Fase ${levelNumber} carregada com sucesso:`, currentLevel);
     
-    // Inicializar player na posição de spawn
     player = new Player();
     if (currentLevel.playerSpawn) {
       player.position.x = currentLevel.playerSpawn.x;
       player.position.y = currentLevel.playerSpawn.y;
     }
     
-    // Inicializar inimigos da fase
     enemies = [];
     if (currentLevel.inimigos && currentLevel.inimigos.length > 0) {
       for (let enemyData of currentLevel.inimigos) {
@@ -92,11 +126,9 @@ async function loadLevel(levelNumber) {
       }
     }
     
-    // Resetar câmera
     camera.x = 0;
     camera.y = 0;
     
-    // Resetar estado do jogo
     gameState.isPaused = false;
     gameState.showingEndScreen = false;
     gameState.showingDeathScreen = false;
@@ -112,9 +144,8 @@ async function loadLevel(levelNumber) {
 
 // Callback para transição de fase
 window.onPhaseTransition = async function(nextPhaseNumber) {
-  if (isLoadingLevel) return;  // Evitar múltiplos carregamentos simultâneos
+  if (isLoadingLevel) return;
   
-  // Verificar se é última fase antes de transicionar
   if (isLastPhase(currentLevel.id)) {
     console.log('🏁 Última fase detectada!');
     showEndScreen();
@@ -135,13 +166,11 @@ function drawBlocks() {
     const screenX = block.x - camera.x;
     const screenY = block.y - camera.y;
     
-    // Desenhar apenas blocos visíveis (otimização)
     if (screenX + block.width > 0 && screenX < canvas.width &&
         screenY + block.height > 0 && screenY < canvas.height) {
       
-      // Cores específicas por tipo
       if (block.tipo === 'bloco_transicao') {
-        ctx.fillStyle = '#FFFFFF';  // Branco
+        ctx.fillStyle = '#FFFFFF';
       } else if (block.tipo === 'bloco_lava') {
         ctx.fillStyle = block.cor || '#FF4500';
       } else {
@@ -150,7 +179,6 @@ function drawBlocks() {
 
       ctx.fillRect(screenX, screenY, block.width, block.height);
       
-      // Desenhar borda para visualizar melhor
       ctx.strokeStyle = '#654321';
       ctx.lineWidth = 2;
       ctx.strokeRect(screenX, screenY, block.width, block.height);
@@ -162,15 +190,12 @@ function drawBlocks() {
 function updateCamera() {
   if (!player) return;
   
-  // Câmera centraliza o player na tela
   const targetCameraX = player.position.x - camera.width / 3;
   const targetCameraY = player.position.y - camera.height / 3;
   
-  // Suavizar movimento da câmera (interpolação)
   camera.x += (targetCameraX - camera.x) * 0.1;
   camera.y += (targetCameraY - camera.y) * 0.1;
   
-  // Limites horizontais da câmera
   if (currentLevel) {
     if (camera.x < 0) camera.x = 0;
     if (camera.x + camera.width > currentLevel.worldWidth) {
@@ -178,7 +203,6 @@ function updateCamera() {
     }
   }
   
-  // Câmera pode seguir livremente na vertical (sem limites superiores)
   if (camera.y < 0) camera.y = 0;
 }
 
@@ -188,28 +212,110 @@ const keys = {
   fastFall: false
 };
 
+// --- Novo: Função auxiliar para enviar mensagem ---
+async function trySendMessage() {
+    if (gameState.messageInput.trim().length > 0) {
+        const success = await sendMessageToServer(gameState.messageInput);
+        if (success) {
+            gameState.messageSent = true;
+        }
+    }
+}
+
 function animate() {
   window.requestAnimationFrame(animate);
   
-  // Fundo escuro de caverna
   ctx.fillStyle = '#1a0f0a';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Verificar se mostrando tela final
+  // Tela final com campo de mensagem
   if (gameState.showingEndScreen) {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     ctx.fillStyle = 'white';
     ctx.font = 'bold 80px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('O Fim', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('Parabéns!', canvas.width / 2, canvas.height / 3);
     
-    ctx.font = '20px Arial';
-    ctx.fillText('Pressione qualquer tecla para reiniciar', canvas.width / 2, canvas.height / 2 + 80);
+    ctx.font = '30px Arial';
+    ctx.fillText('Você completou o jogo!', canvas.width / 2, canvas.height / 3 + 80);
+    
+    if (!gameState.messageSent) {
+      ctx.font = '20px Arial';
+      ctx.fillText('Deixe suas mensagem para os que virão.:', canvas.width / 2, canvas.height / 2);
+      
+      // Campo de input visual
+      const inputWidth = 500;
+      const inputHeight = 50;
+      const inputX = canvas.width / 2 - inputWidth / 2;
+      const inputY = canvas.height / 2 + 40;
+      
+      endScreenElements.input = { x: inputX, y: inputY, width: inputWidth, height: inputHeight }; // Salva coordenadas
+      
+      ctx.fillStyle = '#333';
+      ctx.fillRect(inputX, inputY, inputWidth, inputHeight);
+      
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(inputX, inputY, inputWidth, inputHeight);
+      
+      ctx.fillStyle = 'white';
+      ctx.font = '18px Arial';
+      ctx.textAlign = 'left';
+      const displayText = gameState.messageInput.length > 40 
+        ? '...' + gameState.messageInput.slice(-37) 
+        : gameState.messageInput;
+      ctx.fillText(displayText, inputX + 10, inputY + 30);
+      
+      // Cursor piscante
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        const textWidth = ctx.measureText(displayText).width;
+        ctx.fillRect(inputX + 10 + textWidth + 2, inputY + 10, 2, 30);
+      }
+      
+      // Botão de Envio
+      const buttonWidth = 150;
+      const buttonHeight = 40;
+      const buttonX = canvas.width / 2 - buttonWidth / 2;
+      const buttonY = inputY + inputHeight + 20;
+      
+      endScreenElements.button = { x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight }; // Salva coordenadas
+      
+      ctx.fillStyle = '#4CAF50';
+      ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
+      
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('ENVIAR', canvas.width / 2, buttonY + buttonHeight / 2);
+      
+      ctx.font = '18px Arial';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('Clique fora para pular ou reiniciar o jogo', canvas.width / 2, buttonY + buttonHeight + 40);
+      
+    } else {
+      ctx.font = '24px Arial';
+      ctx.fillStyle = '#00FF00';
+      ctx.fillText('✓ Mensagem enviada!', canvas.width / 2, canvas.height / 2 + 20);
+      
+      ctx.fillStyle = 'white';
+      ctx.font = '18px Arial';
+      ctx.fillText('Pressione qualquer tecla ou toque/clique para reiniciar', canvas.width / 2, canvas.height / 2 + 80);
+      
+      endScreenElements.input = { x: 0, y: 0, width: 0, height: 0 }; // Limpa coordenadas após envio
+      endScreenElements.button = { x: 0, y: 0, width: 0, height: 0 };
+    }
     
     return;
   }
   
-  // Verificar se mostrando tela de morte
+  // Tela de morte
   if (gameState.showingDeathScreen) {
     ctx.fillStyle = '#FF0000';
     ctx.font = 'bold 80px Arial';
@@ -219,7 +325,7 @@ function animate() {
     
     ctx.fillStyle = 'white';
     ctx.font = '20px Arial';
-    ctx.fillText('Pressione qualquer tecla para reiniciar', canvas.width / 2, canvas.height / 2 + 80);
+    ctx.fillText('Pressione qualquer tecla ou toque/clique para reiniciar', canvas.width / 2, canvas.height / 2 + 80);
     
     return;
   }
@@ -234,7 +340,6 @@ function animate() {
 
   const speed = 4;
   
-  // Bloquear controles se jogo pausado
   if (!gameState.isPaused) {
     if (keys.left) {
       player.velocity.x = -speed;
@@ -245,70 +350,47 @@ function animate() {
     }
   }
 
-  // Atualizar player com blocos do mapa e inimigos
   if (!gameState.isPaused) {
     player.update(currentLevel.blocos, enemies);
     
-    // Atualizar todos os inimigos
     for (let enemy of enemies) {
       if (!enemy.isDead) {
         enemy.update(currentLevel.blocos, player);
       }
     }
     
-    // Remover inimigos mortos da lista (opcional, para performance)
     enemies = enemies.filter(enemy => !enemy.isDead);
   }
   
-  // Atualizar câmera
   updateCamera();
-  
-  // Renderizar blocos
   drawBlocks();
   
-  // Renderizar inimigos
   for (let enemy of enemies) {
     if (!enemy.isDead) {
       enemy.draw(camera);
     }
   }
   
-  // Renderizar player
   player.draw(camera);
 
-  // HUD - Informações do jogo
+  // HUD
   ctx.textAlign = 'left';
   ctx.font = 'bold 24px Arial';
   ctx.fillStyle = '#FFFFFF';
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 3;
   
-  // Vida do player
   const healthText = `❤️ ${player.health}/${player.maxHealth}`;
   ctx.strokeText(healthText, 15, 35);
   ctx.fillText(healthText, 15, 35);
   
-  // Contador de inimigos
   const enemyText = `👾 ${enemies.length}`;
   ctx.strokeText(enemyText, 15, 70);
   ctx.fillText(enemyText, 15, 70);
   
-  // Nome da fase
   ctx.font = 'bold 18px Arial';
   ctx.strokeText(currentLevel.nome || 'Fase', 15, 100);
   ctx.fillText(currentLevel.nome || 'Fase', 15, 100);
-
-  // Debug info (canto inferior esquerdo)
-  if (false) { // Mudar para true para ativar debug
-    ctx.font = '12px Arial';
-    ctx.fillStyle = 'yellow';
-    const debugY = canvas.height - 100;
-    ctx.fillText(`Pos: (${Math.round(player.position.x)}, ${Math.round(player.position.y)})`, 10, debugY);
-    ctx.fillText(`Vel: (${Math.round(player.velocity.x)}, ${Math.round(player.velocity.y)})`, 10, debugY + 15);
-    ctx.fillText(`OnGround: ${player.isOnGround} | Pulos: ${player.jumpsRemaining}/${player.maxJumps}`, 10, debugY + 30);
-    ctx.fillText(`Camera: (${Math.round(camera.x)}, ${Math.round(camera.y)})`, 10, debugY + 45);
-    ctx.fillText(`Invuln: ${player.invulnerabilityTimer}`, 10, debugY + 60);
-  }
 }
 
 // Carregar fase 1 ao iniciar
@@ -326,19 +408,53 @@ function jump() {
   }
 }
 
-// Controles de teclado
-window.addEventListener('keydown', (event) => {
-  // Se mostrando tela final ou de morte, qualquer tecla reinicia
-  if (gameState.showingEndScreen || gameState.showingDeathScreen) {
+// --- Novo: Função de restart para click/touch ---
+function handleRestartInteraction(event) {
+  // Se na tela de morte OU tela final COM mensagem enviada, reiniciar
+  if (gameState.showingDeathScreen || (gameState.showingEndScreen && gameState.messageSent)) {
     event.preventDefault();
     restartGame();
+    return true;
+  }
+  return false;
+}
+
+// --- Novo: Função para verificar se o ponto está dentro de um retângulo ---
+function isPointInside(x, y, rect) {
+    return x >= rect.x && x <= rect.x + rect.width &&
+           y >= rect.y && y <= rect.y + rect.height;
+}
+
+// Controles de teclado
+window.addEventListener('keydown', async (event) => {
+  // Tela final - gerenciar input de mensagem
+  if (gameState.showingEndScreen && !gameState.messageSent) {
+    if (event.key === 'Enter') {
+      await trySendMessage(); // Tenta enviar
+      return;
+    } else if (event.key === 'Escape') {
+      restartGame(); // ESC agora reinicia
+      return;
+    } else if (event.key === 'Backspace') {
+      event.preventDefault();
+      gameState.messageInput = gameState.messageInput.slice(0, -1);
+      return;
+    } else if (event.key.length === 1 && gameState.messageInput.length < 100) {
+      event.preventDefault();
+      gameState.messageInput += event.key;
+      return;
+    }
+    event.preventDefault();
     return;
   }
   
-  // Bloquear controles se jogo pausado
+  // Tela final após mensagem enviada ou morte - reiniciar
+  if (handleRestartInteraction(event)) {
+    return;
+  }
+  
   if (gameState.isPaused) return;
 
-  // Prevenir comportamento padrão de setas e espaço
   if (['ArrowUp', 'ArrowLeft', 'ArrowRight', ' ', 'ArrowDown'].includes(event.key)) {
     event.preventDefault();
   }
@@ -367,7 +483,6 @@ window.addEventListener('keydown', (event) => {
       keys.fastFall = true;
       console.log('⬇️ Queda rápida ativada!');
       break;
-    // Trocar de fase para debug (teclas 1 e 2)
     case '1':
       if (!isLoadingLevel) {
         isLoadingLevel = true;
@@ -405,11 +520,47 @@ window.addEventListener('keyup', (event) => {
   }
 });
 
+// --- NOVO: Listener para click na tela (Desktop e Mobile com click) ---
+window.addEventListener('click', async (event) => {
+    // 1. Prioridade: Reinício da tela de morte / tela final (após mensagem)
+    if (handleRestartInteraction(event)) {
+        return;
+    }
+
+    // 2. Lógica da Tela Final ANTES do envio
+    if (gameState.showingEndScreen && !gameState.messageSent) {
+        const x = event.clientX;
+        const y = event.clientY;
+
+        const inputRect = endScreenElements.input;
+        const buttonRect = endScreenElements.button;
+        
+        // Verifica se clicou no botão ENVIAR
+        if (isPointInside(x, y, buttonRect)) {
+            await trySendMessage();
+            event.preventDefault(); // Impede que o click seja tratado como restart (se houver listeners fora do canvas)
+            return;
+        }
+
+        // Verifica se clicou dentro do campo de input (só impede o restart, mas não faz nada de fato, pois o input é visual)
+        if (isPointInside(x, y, inputRect)) {
+            event.preventDefault();
+            return;
+        }
+
+        // Se clicou em QUALQUER LUGAR FORA do botão e do campo de input, REINICIA o jogo.
+        event.preventDefault();
+        restartGame();
+        return;
+    }
+});
+
+
 // Controles touch/mobile
 const btnUp = document.getElementById('btn-up');
 const btnLeft = document.getElementById('btn-left');
 const btnRight = document.getElementById('btn-right');
-const btnFastFall = document.getElementById('btn-attack'); // Renomeado conceitualmente
+const btnFastFall = document.getElementById('btn-attack');
 
 if (btnUp) {
   btnUp.addEventListener('click', (e) => { 
@@ -468,7 +619,6 @@ if (btnRight) {
   });
 }
 
-// Botão de queda rápida
 if (btnFastFall) {
   btnFastFall.addEventListener('mousedown', () => { 
     if (gameState.isPaused) return;
@@ -495,12 +645,51 @@ if (btnFastFall) {
   });
 }
 
-// Prevenir scroll no mobile
-canvas.addEventListener('touchstart', (e) => { 
-  e.preventDefault(); 
+// --- NOVO: Listener para touch na tela (Mobile), fora dos botões de controle ---
+canvas.addEventListener('touchstart', async (e) => { 
+  e.preventDefault();
+  
+  // O evento touchstart no canvas não se propaga para os botões do DOM, 
+  // mas precisamos mapear a coordenada de toque para a tela do canvas.
+  
+  const rect = canvas.getBoundingClientRect();
+  // Se for um evento touch, pegamos as coordenadas do primeiro toque
+  const x = e.touches[0].clientX - rect.left;
+  const y = e.touches[0].clientY - rect.top;
+
+  // 1. Prioridade: Reinício da tela de morte / tela final (após mensagem)
+  // Nota: handleRestartInteraction usa event.preventDefault(), mas não impede o fluxo aqui
+  if (gameState.showingDeathScreen || (gameState.showingEndScreen && gameState.messageSent)) {
+      restartGame();
+      return;
+  }
+  
+  // 2. Lógica da Tela Final ANTES do envio
+  if (gameState.showingEndScreen && !gameState.messageSent) {
+      const inputRect = endScreenElements.input;
+      const buttonRect = endScreenElements.button;
+      
+      // Ajustamos as coordenadas do retângulo para o canvas (já feito acima com rect.left/top)
+      
+      // Verifica se tocou no botão ENVIAR
+      if (isPointInside(x, y, buttonRect)) {
+          await trySendMessage();
+          return;
+      }
+
+      // Verifica se tocou dentro do campo de input
+      if (isPointInside(x, y, inputRect)) {
+          // Apenas impede o restart
+          return;
+      }
+
+      // Se tocou em QUALQUER LUGAR FORA do botão e do campo de input, REINICIA o jogo.
+      restartGame();
+      return;
+  }
+  
 }, { passive: false });
 
-// Atualizar tamanho do canvas ao redimensionar janela
 window.addEventListener('resize', () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight * 0.85;
