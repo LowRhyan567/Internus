@@ -172,66 +172,77 @@ class Player{
         window.ctx.globalAlpha = previousAlpha;
     }
 
-    checkCollisionWithBlocks(blocks) {
-        this.isOnGround = false;
+// No arquivo Player.js, substitua o método checkCollisionWithEnemies por este:
 
-        for (let block of blocks) {
-            // AABB Collision Detection
+    checkCollisionWithEnemies(enemies) {
+        if (this.isDead) return;
+    
+        for (let enemy of enemies) {
+            if (enemy.isDead) continue;
+        
+            // Verificar se é o boss Virus (que tem colisão circular)
+            if (enemy.phasesThroughWalls && enemy.radius) {
+            // Colisão circular com o boss
+            const playerCenterX = this.position.x + this.width / 2;
+            const playerCenterY = this.position.y + this.height / 2;
+            const enemyCenterX = enemy.position.x + enemy.radius;
+            const enemyCenterY = enemy.position.y + enemy.radius;
+            
+            const dx = playerCenterX - enemyCenterX;
+            const dy = playerCenterY - enemyCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Raio do player aproximado como metade da diagonal
+            const playerRadius = Math.min(this.width, this.height) / 2;
+            
+            if (distance < playerRadius + enemy.radius) {
+                // Player sempre toma dano do boss (não pode matá-lo)
+                if (this.takeDamage(1)) {
+                    // Knockback - empurrar player para longe do boss
+                    const knockbackDirection = (this.position.x < enemy.position.x) ? -1 : 1;
+                    this.velocity.x = knockbackDirection * 12;
+                    this.velocity.y = -10;
+                    console.log('🦠 Contaminado pelo Vírus!');
+                }
+            }
+        } else {
+            // Colisão normal AABB com inimigos regulares
             if (
-                this.sides.right > block.x &&
-                this.sides.left < block.x + block.width &&
-                this.sides.bottom > block.y &&
-                this.sides.top < block.y + block.height
+                this.sides.right > enemy.sides.left &&
+                this.sides.left < enemy.sides.right &&
+                this.sides.bottom > enemy.sides.top &&
+                this.sides.top < enemy.sides.bottom
             ) {
-                // Verificar bloco de transição PRIMEIRO
-                if (block.tipo === 'bloco_transicao') {
-                    if (enemies.length === 0) {
-                       if (window.onPhaseTransition) {
-                          window.onPhaseTransition(block.proximaFase);
-                       }
-                    return;
-                    }
-                }
+                // Calcular overlaps para determinar direção da colisão
+                const overlapTop = this.sides.bottom - enemy.sides.top;
+                const overlapBottom = enemy.sides.bottom - this.sides.top;
+                const overlapLeft = this.sides.right - enemy.sides.left;
+                const overlapRight = enemy.sides.right - this.sides.left;
                 
-                // Verificar bloco de lava - causa dano
-                if (block.tipo === 'bloco_lava') {
-                      this.takeDamage(1);
-                      this.velocity.y = -15;
-                    return;
-             }
-
-                // Detectar direção da colisão
-                const overlapTop = this.sides.bottom - block.y;
-                const overlapBottom = (block.y + block.height) - this.sides.top;
-                const overlapLeft = this.sides.right - block.x;
-                const overlapRight = (block.x + block.width) - this.sides.left;
-
                 const minOverlap = Math.min(overlapTop, overlapBottom, overlapLeft, overlapRight);
-
-                // Colisão pelo topo (player caindo)
+                
+                // Se player está caindo (velocity.y > 0) E colisão é por cima do inimigo
                 if (minOverlap === overlapTop && this.velocity.y > 0) {
-                    this.position.y = block.y - this.height;
-                    this.velocity.y = 0;
-                    this.isOnGround = true;
+                    // Player mata o inimigo
+                    enemy.takeDamage(enemy.maxHealth, 0); // Dano letal
+                    
+                    // Player recebe um pequeno impulso para cima (bounce)
+                    this.velocity.y = -12;
+                    console.log('💥 Inimigo eliminado por stomping!');
                 }
-                // Colisão pelo fundo (player pula dentro de bloco)
-                else if (minOverlap === overlapBottom && this.velocity.y < 0) {
-                    this.position.y = block.y + block.height;
-                    this.velocity.y = 0;
-                }
-                // Colisão pela esquerda (player vindo da esquerda)
-                else if (minOverlap === overlapLeft && this.velocity.x > 0) {
-                    this.position.x = block.x - this.width;
-                    this.velocity.x = 0;
-                }
-                // Colisão pela direita (player vindo da direita)
-                else if (minOverlap === overlapRight && this.velocity.x < 0) {
-                    this.position.x = block.x + block.width;
-                    this.velocity.x = 0;
+                // Qualquer outra direção de colisão - player toma dano
+                else {
+                    if (this.takeDamage(1)) {
+                        // Knockback - empurrar player para longe do inimigo
+                        const knockbackDirection = (this.position.x < enemy.position.x) ? -1 : 1;
+                        this.velocity.x = knockbackDirection * 10;
+                        this.velocity.y = -8;
+                    }
                 }
             }
         }
     }
+}
     
     // Verificar colisão com inimigos
     checkCollisionWithEnemies(enemies) {
@@ -276,6 +287,79 @@ class Player{
             }
         }
     }
+
+
+    checkCollisionWithBlocks(blocks) {
+        this.isOnGround = false;
+
+        for (let block of blocks) {
+            // AABB Collision Detection
+            if (
+                this.sides.right > block.x &&
+                this.sides.left < block.x + block.width &&
+                this.sides.bottom > block.y &&
+                this.sides.top < block.y + block.height
+            )  {
+            // Verificar bloco de transição PRIMEIRO
+            if (block.tipo === 'bloco_transicao') {
+                // Verificar se todos os inimigos foram derrotados
+                let allEnemiesDead = true;
+                if (window.enemies) {
+                    for (let enemy of window.enemies) {
+                        if (!enemy.isDead && !enemy.phasesThroughWalls) {
+                            allEnemiesDead = false;
+                            break;
+                        }
+                    }
+                }
+                
+                if (allEnemiesDead) {
+                    if (window.onPhaseTransition) {
+                        window.onPhaseTransition(block.proximaFase);
+                    }
+                    return;
+                }
+            }
+            
+            // Verificar bloco de lava - causa dano
+            if (block.tipo === 'bloco_lava') {
+                this.takeDamage(1);
+                this.velocity.y = -15;
+                return;
+            }
+
+            // Detectar direção da colisão
+            const overlapTop = this.sides.bottom - block.y;
+            const overlapBottom = (block.y + block.height) - this.sides.top;
+            const overlapLeft = this.sides.right - block.x;
+            const overlapRight = (block.x + block.width) - this.sides.left;
+
+            const minOverlap = Math.min(overlapTop, overlapBottom, overlapLeft, overlapRight);
+
+            // Colisão pelo topo (player caindo)
+            if (minOverlap === overlapTop && this.velocity.y > 0) {
+                this.position.y = block.y - this.height;
+                this.velocity.y = 0;
+                this.isOnGround = true;
+            }
+            // Colisão pelo fundo (player pula dentro de bloco)
+            else if (minOverlap === overlapBottom && this.velocity.y < 0) {
+                this.position.y = block.y + block.height;
+                this.velocity.y = 0;
+            }
+            // Colisão pela esquerda (player vindo da esquerda)
+            else if (minOverlap === overlapLeft && this.velocity.x > 0) {
+                this.position.x = block.x - this.width;
+                this.velocity.x = 0;
+            }
+            // Colisão pela direita (player vindo da direita)
+            else if (minOverlap === overlapRight && this.velocity.x < 0) {
+                this.position.x = block.x + block.width;
+                this.velocity.x = 0;
+            }
+        }
+    }
+}
 
     update(blocks, enemies) {
         if (this.isDead) return;

@@ -32,9 +32,7 @@ class GameHTTPRequestHandler(SimpleHTTPRequestHandler):
                 
                 if mensagem:
                     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    print('\n' + '='*60)
-                    print(f'💬 "{mensagem}"')
-                    print('='*60 + '\n')
+                    print(mensagem)
                     
                     self.send_response(200)
                     self.send_header('Content-type', 'application/json')
@@ -60,5 +58,5 @@ porta = 8001
 
 os.chdir(r'c:\Users\rhyan\Downloads\Projetos\Internus - Copia')
 server = HTTPServer(('localhost', porta), GameHTTPRequestHandler)
-print(f"{porta}. Você chegou cedo.")
+print(porta)
 server.serve_forever()

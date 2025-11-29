@@ -1,22 +1,60 @@
 {
   "id": 2,
-  "nome": "Cérebro",
-  "worldWidth": 2500,
+  "nome": "Cerébro",
+  "worldWidth": 1200,
   "worldHeight": 4000,
-  "playerSpawn": { "x": 960, "y": 2400 },
+  "playerSpawn": { "x": 600, "y": 3800 },
+  "inimigos": [],
+  "boss": {
+    "x": 600,
+    "y": 3500
+  },
   "blocos": [
-    { "x": 0, "y": 750, "width": 1200, "height": 50, "tipo": "chao", "cor": "#2F4F4F" },
+    { "x": 0, "y": 3950, "width": 1200, "height": 50, "tipo": "chao", "cor": "#2F4F4F" },
     
-    { "x": 200, "y": 600, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
-    { "x": 500, "y": 550, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
-    { "x": 800, "y": 600, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 400, "y": 3700, "width": 150, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 700, "y": 3650, "width": 150, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 300, "y": 3550, "width": 120, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 600, "y": 3500, "width": 120, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 900, "y": 3450, "width": 120, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
     
-    { "x": 350, "y": 450, "width": 60, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
-    { "x": 650, "y": 400, "width": 60, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 200, "y": 3300, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 400, "y": 3250, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 600, "y": 3300, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 800, "y": 3250, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 1000, "y": 3300, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
     
-    { "x": -100, "y": 0, "width": 100, "height": 800, "tipo": "bloco_lava", "cor": "#FF4500" },
-    { "x": 1200, "y": 0, "width": 100, "height": 800, "tipo": "bloco_lava", "cor": "#FF4500" },
+    { "x": 500, "y": 3000, "width": 200, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 300, "y": 2900, "width": 100, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 700, "y": 2850, "width": 100, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 200, "y": 2750, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 800, "y": 2700, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
     
-    { "x": 550, "y": 50, "width": 100, "height": 50, "tipo": "bloco_vitoria", "cor": "#00FF00", "visivel": false }
+    { "x": 550, "y": 2500, "width": 100, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 400, "y": 2400, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 700, "y": 2350, "width": 80, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 300, "y": 2250, "width": 70, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 800, "y": 2200, "width": 70, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 500, "y": 2100, "width": 60, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    
+    { "x": 200, "y": 1900, "width": 60, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 400, "y": 1850, "width": 60, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 600, "y": 1900, "width": 60, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 800, "y": 1850, "width": 60, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 1000, "y": 1900, "width": 60, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    
+    { "x": 350, "y": 1650, "width": 150, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 650, "y": 1600, "width": 150, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 450, "y": 1500, "width": 100, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    { "x": 750, "y": 1450, "width": 100, "height": 30, "tipo": "plataforma", "cor": "#8B4513" },
+    
+    { "x": 550, "y": 1350, "width": 100, "height": 50, "tipo": "plataforma_vitoria", "cor": "#2F4F4F" },
+    
+    { "x": 550, "y": 1300, "width": 100, "height": 50, "tipo": "bloco_transicao", "cor": "#00FF00", "proximaFase": 3 },
+    
+    { "x": 0, "y": 4000, "width": 1200, "height": 100, "tipo": "bloco_lava", "cor": "#FF4500" },
+    
+    { "x": -100, "y": 0, "width": 100, "height": 4100, "tipo": "parede", "cor": "#333333" },
+    { "x": 1200, "y": 0, "width": 100, "height": 4100, "tipo": "parede", "cor": "#333333" }
   ]
 }

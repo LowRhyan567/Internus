@@ -125,6 +125,12 @@ async function loadLevel(levelNumber) {
         console.log(`👾 Inimigo criado em (${enemyData.x}, ${enemyData.y})`);
       }
     }
+
+    if(currentLevel.inimigos && currentLevel.inimigos.length === 0 && currentLevel.boss) {
+      const boss = new Boss(currentLevel.boss.x, currentLevel.boss.y);
+      enemies.push(boss);
+      console.log(`👾 Boss criado em (${currentLevel.boss.x}, ${currentLevel.boss.y})`);
+    }
     
     camera.x = 0;
     camera.y = 0;
