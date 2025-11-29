@@ -4,9 +4,14 @@
   "worldWidth": 2000,
   "worldHeight": 3000,
   "playerSpawn": { "x": 960, "y": 2400 },
+  "inimigos": [
+    { "x": 400, "y": 700 },
+    { "x": 900, "y": 1100 },
+    { "x": 1500, "y": 400 }
+  ],
   "blocos": [
     { "id": 0, "x": 0, "y": 895, "width": 200, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
-    {"id": 0, "x": 300, "y": 800, "width": 400, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
+    { "id": 0, "x": 300, "y": 800, "width": 400, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
     { "id": 2, "x": 800, "y": 700, "width": 300, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
     { "id": 3, "x": 1200, "y": 600, "width": 350, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
     { "id": 4, "x": 1600, "y": 500, "width": 300, "height": 100, "tipo": "plataforma", "cor": "#8B4513" },
