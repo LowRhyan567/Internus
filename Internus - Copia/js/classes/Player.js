@@ -185,10 +185,12 @@ class Player{
             ) {
                 // Verificar bloco de transição PRIMEIRO
                 if (block.tipo === 'bloco_transicao') {
-                    if (window.onPhaseTransition) {
-                        window.onPhaseTransition(block.proximaFase);
-                    }
+                    if (enemies.length === 0) {
+                       if (window.onPhaseTransition) {
+                          window.onPhaseTransition(block.proximaFase);
+                       }
                     return;
+                    }
                 }
                 
                 // Verificar bloco de lava - causa dano
